@@ -6,32 +6,32 @@ import { v4 as uuidv4 } from 'uuid';
 const Home = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [premieres, setPremieres] = useState([]);
-  const [premieresAux, setPremieresAux] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [moviesAux, setMoviesAux] = useState([]);
 
-  useEffect(() => {    
+  useEffect(() => {
     fetchPremiere()
   }, [])
 
   const fetchPremiere = async () => {
-    const favsMovies = localStorage.getItem("favs-movies");
-    const movies = localStorage.getItem("movies");
-    if (movies) {
-      setPremieres(JSON.parse(movies))
+    const favsMovies = localStorage.getItem("save-movies");
+    const moviesStorage = localStorage.getItem("movies");
+    if (moviesStorage) {
+      setMovies(JSON.parse(moviesStorage))
     } else {
       try {
         setLoading(true)
         const url = 'https://api.themoviedb.org/3/discover/movie?api_key=756e1622851086c3d011b8461693b962&language=es-ES&primary_release_year=2019';
         const data = await fetch(url)
         const { results } = await data.json()
-        
+
         if (favsMovies) {
-          const moviesJson = JSON.parse(favsMovies)          
+          const moviesJson = JSON.parse(favsMovies)
           const newArray = results.map(item => moviesJson.find(itemMovie => itemMovie.id === item.id) || item);
-          setPremieres(newArray)
+          setMovies(newArray)
           localStorage.setItem("movies", JSON.stringify(newArray))
         } else {
-          setPremieres(results)
+          setMovies(results)
           localStorage.setItem("movies", JSON.stringify(results))
         }
         setLoading(false)
@@ -44,59 +44,58 @@ const Home = () => {
   }
 
   const desorder = () => {
-    setPremieres([])
+    setMovies([])
     setLoading(true)
     setTimeout(() => {
-      const newArray = premieres.sort((a, b) => { return (Math.random() - 0.5) });
-      setPremieres(newArray)
-      localStorage.setItem("movies", JSON.stringify(newArray))      
-      setLoading(false)      
+      const newArray = movies.sort((a, b) => { return (Math.random() - 0.5) });
+      setMovies(newArray)
+      localStorage.setItem("movies", JSON.stringify(newArray))
+      setLoading(false)
     }, 500);
   }
 
   const changePunctuation = () => {
-    setPremieres([])
+    setMovies([])
     setLoading(true)
     setTimeout(() => {
       const auxPremiere = []
-      premieres.forEach(element => {
+      movies.forEach(element => {
         if (Math.random() > 0.5) {
           const average = Math.random() * 10
           element.vote_average = average.toFixed();
           auxPremiere.push(element)
         }
       });
-      setPremieres(premieres)
+      setMovies(movies)
       setLoading(false)
       if (auxPremiere.length > 0) {
-        setPremieresAux(auxPremiere)
+        setMoviesAux(auxPremiere)
       }
     }, 500);
   }
 
-  const duplicate = (movie) => {
-    const auxPremiere = premieres
-    setPremieres([])
-    setLoading(true)
-    setTimeout(() => {
-      movie.id = uuidv4()
-      auxPremiere.push(movie)
-      setPremieres(auxPremiere)
-      setPremieresAux([...premieresAux, movie])
-      setLoading(false)
-    }, 500);
+  console.log("movies ==>", movies);
+  console.log("moviesAux ==>", moviesAux);
+  const duplicate = (movie) => {   
+    let movieAux = { ...movie }    
+    movieAux.id = uuidv4()
+
+    setMovies([...movies, movieAux])
+    setMoviesAux([...moviesAux, movieAux])
   }
 
   const guardar = () => {
-    localStorage.setItem("favs-movies", JSON.stringify(premieresAux));
+    localStorage.setItem("save-movies", JSON.stringify(moviesAux));
+    const newArray = movies.map(item => moviesAux.find(itemMovie => itemMovie.id === item.id) || item);
+    localStorage.setItem("movies", JSON.stringify(newArray));
     alert('Peliculas guardadas')
   }
 
   const changeAuthor = (movie) => {
-    const favsMovies = localStorage.getItem("favs-movies");
+    const favsMovies = localStorage.getItem("save-movies");
     const favsMoviesJson = JSON.parse(favsMovies)
     const movies = localStorage.getItem("movies");
-    const moviesJson = JSON.parse(movies)    
+    const moviesJson = JSON.parse(movies)
 
     let include = false
     if (favsMovies) {
@@ -108,10 +107,10 @@ const Home = () => {
       });
       if (!include) {
         favsMoviesJson.push(movie)
-      }      
-      setPremieresAux(favsMoviesJson)
-    } else {      
-      setPremieresAux([movie])
+      }
+      setMoviesAux(favsMoviesJson)
+    } else {
+      setMoviesAux([movie])
     }
 
     moviesJson.forEach(element => {
@@ -120,13 +119,13 @@ const Home = () => {
       }
     });
     localStorage.setItem("movies", JSON.stringify(moviesJson));
-    setPremieres(moviesJson)
+    setMovies(moviesJson)
   }
 
   return (
     <div className='Home'>
       <div className='container-flex'>
-        <div className='col-12 anchor' id='premieres'>
+        <div className='col-12 anchor' id='movies'>
 
           <button onClick={() => desorder()} type="button" className="btn btn-link">Desordenar</button>
           <button onClick={() => changePunctuation()} type="button" className="btn btn-link">Cambiar Puntuacion</button>
@@ -135,9 +134,9 @@ const Home = () => {
           <div className='row'>
             <div className='col-12 text-left'>
             </div>
-            {!loading && premieres.map(movie => <MovieCard movie={movie} key={movie.id} duplicate={duplicate} changeAuthor={changeAuthor} />)}
+            {!loading && movies.map(movie => <MovieCard movie={movie} key={movie.id} duplicate={duplicate} changeAuthor={changeAuthor} />)}
             {loading && <div className='col-12 text-center'> <p>Cargando información...</p> </div>}
-            {!loading && !error && !premieres.length && <div className='col-12 text-center'> <h2>No hay información disponible.</h2></div>}
+            {!loading && !error && !movies.length && <div className='col-12 text-center'> <h2>No hay información disponible.</h2></div>}
             {!loading && error && <div className='col-12 text-center'> <h2>Ocurrió un error.</h2></div>}
           </div>
         </div>

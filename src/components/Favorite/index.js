@@ -7,7 +7,7 @@ const Favorite = () => {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
-    const movies = localStorage.getItem("favs-movies");
+    const movies = localStorage.getItem("save-movies");
     if (movies) {
       setMovies(JSON.parse(movies));
     }
